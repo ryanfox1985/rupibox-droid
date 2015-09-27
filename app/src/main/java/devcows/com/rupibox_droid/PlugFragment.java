@@ -98,6 +98,6 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
         plug.setValue(((Switch) v).isChecked());
         Log.v(TAG, "POST plug: " + plug.toString());
 
-        new PlugPostTask(mContext, mServerApiUrl).execute(plug);
+        new PlugPostTask(mContext, mServerApiUrl, plug).execute();
     }
 }

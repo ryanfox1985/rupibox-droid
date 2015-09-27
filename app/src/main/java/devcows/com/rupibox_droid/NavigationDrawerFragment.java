@@ -334,21 +334,24 @@ public class NavigationDrawerFragment extends Fragment {
             for (String match: matches){
                 String[] words = match.split(" ");
 
-                for(String word: words) {
+                if(words.length == 2) {
+                    for (String word : words) {
+                        int distance = computeLevenshteinDistance(word, "encender");
+                        if (distance <= 2) {
+                            value = true;
+                        }
 
-                    String word_lower = word.toLowerCase();
-                    if (word_lower.compareTo("encender") == 0){
-                        value = true;
-                    }
+                        distance = computeLevenshteinDistance(word, "apagar");
+                        if (distance <= 2) {
+                            value = false;
+                        }
 
-                    if(word_lower.compareTo("apagar") == 0){
-                        value = false;
-                    }
-
-                    for(Plug element: MainActivity.plugs){
-                        if (element.getName().toLowerCase().compareTo((word_lower)) == 0){
-                            plug = element;
-                            break;
+                        for (Plug element : MainActivity.plugs) {
+                            distance = computeLevenshteinDistance(word, element.getName());
+                            if (distance <= 2) {
+                                plug = element;
+                                break;
+                            }
                         }
                     }
                 }
@@ -356,10 +359,70 @@ public class NavigationDrawerFragment extends Fragment {
 
             if (value != null && plug != null){
                 plug.setValue(value);
-                new PlugPostTask(getActivity(), serverApiUrl).execute(plug);
+                new PlugPostTask(getActivity(), serverApiUrl, plug).execute();
             }
         }
 
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
+    private static String unaccent(String in){
+        String out = in.replaceAll("[èéêë]","e");
+        out = out.replaceAll("[ûù]","u");
+        out = out.replaceAll("[ïî]","i");
+        out = out.replaceAll("[àâ]","a");
+        out = out.replaceAll("Ô","o");
+
+        out = out.replaceAll("[ÈÉÊË]","E");
+        out = out.replaceAll("[ÛÙ]","U");
+        out = out.replaceAll("[ÏÎ]","I");
+        out = out.replaceAll("[ÀÂ]","A");
+        out = out.replaceAll("Ô","O");
+
+        return out;
+    }
+
+    private static int minimum(int a, int b, int c) {
+        if(a<=b && a<=c)
+        {
+            return a;
+        }
+        if(b<=a && b<=c)
+        {
+            return b;
+        }
+        return c;
+    }
+
+    public static int computeLevenshteinDistance(String str1, String str2) {
+        str1 = unaccent(str1).toLowerCase();
+        str2 = unaccent(str2).toLowerCase();
+
+        return computeLevenshteinDistance(str1.toCharArray(), str2.toCharArray());
+    }
+
+    private static int computeLevenshteinDistance(char [] str1, char [] str2) {
+        int [][]distance = new int[str1.length+1][str2.length+1];
+
+        for(int i=0;i<=str1.length;i++)
+        {
+            distance[i][0]=i;
+        }
+        for(int j=0;j<=str2.length;j++)
+        {
+            distance[0][j]=j;
+        }
+        for(int i=1;i<=str1.length;i++)
+        {
+            for(int j=1;j<=str2.length;j++)
+            {
+                distance[i][j]= minimum(distance[i-1][j]+1,
+                        distance[i][j-1]+1,
+                        distance[i-1][j-1]+
+                                ((str1[i-1]==str2[j-1])?0:1));
+            }
+        }
+        return distance[str1.length][str2.length];
     }
 }
