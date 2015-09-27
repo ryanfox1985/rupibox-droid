@@ -79,6 +79,7 @@ public class PlugAdapter extends BaseAdapter {
         }
 
         Plug plug = (Plug) getItem(position);
+        plug.setAdapter(this);
         holder.sw_plug_value.setTag(plug);
         holder.sw_plug_value.setOnClickListener(fragment);
 

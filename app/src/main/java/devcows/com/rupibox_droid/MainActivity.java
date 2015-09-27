@@ -1,6 +1,7 @@
 package devcows.com.rupibox_droid;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -13,11 +14,16 @@ import android.view.MenuItem;
 import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
 import com.octo.android.robospice.SpiceManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     public static final int SECTION_MAIN = 1;
     public static final int SECTION_SETTINGS = 2;
+    public static List<Plug> plugs = new ArrayList<>();
+
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -52,7 +58,7 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1, spiceManager))
+                .replace(R.id.container, PlaceholderFragment.newInstance(getBaseContext(), position + 1, spiceManager), "MY_FRAGMENT")
                 .commit();
     }
 
@@ -97,6 +103,7 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            onNavigationDrawerItemSelected(SECTION_SETTINGS);
             return true;
         }
 
@@ -131,33 +138,28 @@ public class MainActivity extends AppCompatActivity
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static PlaceholderFragment newInstance(int sectionNumber, SpiceManager spiceManager) {
+        public static Fragment newInstance(Context context, int sectionNumber, SpiceManager spiceManager) {
             mSpiceManager = spiceManager;
-            PlaceholderFragment fragment = new PlaceholderFragment();
+            Fragment fragment = new PlaceholderFragment();
 
             switch (sectionNumber) {
                 case MainActivity.SECTION_MAIN:
-                    fragment = new PlugFragment();
+                    fragment = new PlugFragment(context);
                     break;
                 case MainActivity.SECTION_SETTINGS:
+                    fragment = new SettingsFragment();
                     break;
             }
 
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
             fragment.setArguments(args);
+
             return fragment;
         }
 
         public PlaceholderFragment() {
         }
-
-//        @Override
-//        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                                 Bundle savedInstanceState) {
-//            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-//            return rootView;
-//        }
 
         @Override
         public void onAttach(Activity activity) {

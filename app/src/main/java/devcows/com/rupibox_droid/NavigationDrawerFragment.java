@@ -1,5 +1,8 @@
 package devcows.com.rupibox_droid;
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.speech.RecognizerIntent;
 import android.support.v7.app.AppCompatActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
@@ -11,6 +14,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,6 +25,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -251,6 +257,21 @@ public class NavigationDrawerFragment extends Fragment {
             return true;
         }
 
+        if (item.getItemId() == R.id.speak_btn) {
+            startVoiceRecognitionActivity();
+            return true;
+        }
+
+        if (item.getItemId() == R.id.refresh_btn){
+            Fragment myFragment = getFragmentManager().findFragmentByTag("MY_FRAGMENT");
+            if (myFragment != null && myFragment.isVisible()) {
+                if (myFragment.getClass() == PlugFragment.class){
+                    ((PlugFragment) myFragment).refresh_plugs();
+                }
+            }
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -277,5 +298,68 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
+    }
+
+
+    private static final int REQUEST_CODE = 1234;
+    /**
+     * Fire an intent to start the voice recognition activity.
+     */
+    private void startVoiceRecognitionActivity() {
+        try {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-ES");
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Voice command");
+            startActivityForResult(intent, REQUEST_CODE);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(getActivity(), "Imcompatible voice", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Handle the results from the voice recognition activity.
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String serverApiUrl = sharedPref.getString("server_api_url", null);
+
+            Boolean value = false;
+            Plug plug = null;
+
+            // Populate the wordsList with the String values the recognition engine thought it heard
+            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+            for (String match: matches){
+                String[] words = match.split(" ");
+
+                for(String word: words) {
+
+                    String word_lower = word.toLowerCase();
+                    if (word_lower.compareTo("encender") == 0){
+                        value = true;
+                    }
+
+                    if(word_lower.compareTo("apagar") == 0){
+                        value = false;
+                    }
+
+                    for(Plug element: MainActivity.plugs){
+                        if (element.getName().toLowerCase().compareTo((word_lower)) == 0){
+                            plug = element;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (value != null && plug != null){
+                plug.setValue(value);
+                new PlugPostTask(getActivity(), serverApiUrl).execute(plug);
+            }
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }

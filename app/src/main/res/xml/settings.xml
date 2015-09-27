@@ -1,0 +1,14 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Application parameters:">
+
+        <EditTextPreference
+            android:key="server_api_url"
+            android:title="Server API URL:"
+            android:summary="http://..."
+            android:dialogTitle="Set an server API URL:" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

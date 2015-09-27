@@ -1,6 +1,9 @@
 package devcows.com.rupibox_droid;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,22 +11,13 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 /**
  * Created by fox on 9/25/15.
@@ -33,12 +27,31 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
 
     private TextView mTxtLoading;
     private ListView mListView;
+    private Context mContext;
+    private String mServerApiUrl;
 
     private static final String TAG = "PlugFragment";
 
-    public PlugFragment() {
-        PlugRequest request = new PlugRequest();
-        mSpiceManager.execute(request, "", DurationInMillis.ONE_MINUTE, this);
+    public PlugFragment(Context context) {
+        this.mContext = context;
+    }
+
+    public void refresh_plugs(){
+        mListView.setVisibility(View.INVISIBLE);
+        mTxtLoading.setVisibility(View.VISIBLE);
+        mTxtLoading.setText("Loading plugs...");
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mServerApiUrl = sharedPref.getString("server_api_url", null);
+
+        if (mServerApiUrl != null) {
+            MainActivity.plugs = new ArrayList<>();
+
+            PlugRequest request = new PlugRequest(mServerApiUrl);
+            mSpiceManager.execute(request, "", DurationInMillis.ONE_MINUTE, this);
+        } else {
+            Toast.makeText(mContext, "Please set server API URL!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -48,14 +61,13 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
 
         // Get ListView object from xml
         mListView = (ListView) rootView.findViewById(R.id.plug_list);
-        mListView.setVisibility(View.INVISIBLE);
 
-        mAdapter = new PlugAdapter(getActivity().getBaseContext(), new PlugList(), this);
+        mAdapter = new PlugAdapter(mContext, new PlugList(), this);
         mListView.setAdapter(mAdapter);
 
         mTxtLoading = (TextView) rootView.findViewById(R.id.txt_loading);
-        mTxtLoading.setVisibility(View.VISIBLE);
-        mTxtLoading.setText("Loading plugs...");
+
+        refresh_plugs();
 
         return rootView;
     }
@@ -66,7 +78,7 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
         mListView.setVisibility(View.INVISIBLE);
 
         mTxtLoading.setVisibility(View.VISIBLE);
-        mTxtLoading.setText("Error Robospice fail...");
+        mTxtLoading.setText("Error Robospice fail..." + spiceException.getMessage());
     }
 
     @Override
@@ -77,6 +89,7 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
         mAdapter.notifyDataSetChanged();
 
         mListView.setVisibility(View.VISIBLE);
+        MainActivity.plugs = plugs;
     }
 
     @Override
@@ -85,6 +98,6 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
         plug.setValue(((Switch) v).isChecked());
         Log.v(TAG, "POST plug: " + plug.toString());
 
-        new PlugPostTask(getActivity().getBaseContext()).execute(plug);
+        new PlugPostTask(mContext, mServerApiUrl).execute(plug);
     }
 }

@@ -24,16 +24,18 @@ public class PlugPostTask extends AsyncTask<Plug, Void, String> {
 
     private final String TAG = "PlugPostTask";
     private Context context;
+    private String server_api_url;
 
-    public PlugPostTask(Context context) {
+    public PlugPostTask(Context context, String server_api_url) {
         this.context = context;
+        this.server_api_url = server_api_url;
     }
 
     @Override
     protected String doInBackground(Plug... plugs) {
         Plug plug = plugs[0];
 
-        String url = String.format("http://10.10.10.104:3000/pins/%s.json", plug.getId());
+        String url = String.format("%s/pins/%s.json", server_api_url, plug.getId());
         return POST(url, plug);
     }
 

@@ -7,13 +7,16 @@ import com.octo.android.robospice.request.springandroid.SpringAndroidSpiceReques
  */
 public class PlugRequest extends SpringAndroidSpiceRequest<PlugList> {
 
-    public PlugRequest() {
+    private String server_api_url;
+
+    public PlugRequest(String server_api_url) {
         super(PlugList.class);
+        this.server_api_url = server_api_url;
     }
 
     @Override
     public PlugList loadDataFromNetwork() throws Exception {
-        String url = String.format("http://10.10.10.104:3000/pins.json");
+        String url = String.format("%s/pins.json", server_api_url);
         return getRestTemplate().getForObject(url, PlugList.class);
     }
 }

@@ -1,5 +1,7 @@
 package devcows.com.rupibox_droid;
 
+import android.widget.Adapter;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -15,6 +17,7 @@ public class Plug {
     private Integer pin_pi;
     private Boolean value;
     private String url;
+    private PlugAdapter mAdapter;
 
     public Plug() {
     }
@@ -26,6 +29,10 @@ public class Plug {
     }
 
     public String getName() {
+        if (name == null){
+            return "";
+        }
+
         return name;
     }
 
@@ -43,10 +50,18 @@ public class Plug {
 
     public void setValue(Boolean value) {
         this.value = value;
+
+        if(mAdapter != null) {
+            this.mAdapter.notifyDataSetChanged();
+        }
     }
 
     public String getUrl() {
         return url;
+    }
+
+    public void setAdapter(PlugAdapter adapter){
+        this.mAdapter = adapter;
     }
 
     public JSONObject getJsonObject() throws JSONException{
