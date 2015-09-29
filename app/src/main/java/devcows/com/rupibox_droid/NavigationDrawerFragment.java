@@ -14,7 +14,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,6 +26,11 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+
+import devcows.com.rupibox_droid.pojo.Plug;
+import devcows.com.rupibox_droid.pojo.PlugList;
+import devcows.com.rupibox_droid.views.PlugFragment;
+import devcows.com.rupibox_droid.views.SettingsFragment;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -262,12 +266,10 @@ public class NavigationDrawerFragment extends Fragment {
             return true;
         }
 
-        if (item.getItemId() == R.id.refresh_btn){
+        if (item.getItemId() == R.id.refresh_btn) {
             Fragment myFragment = getFragmentManager().findFragmentByTag("MY_FRAGMENT");
-            if (myFragment != null && myFragment.isVisible()) {
-                if (myFragment.getClass() == PlugFragment.class){
-                    ((PlugFragment) myFragment).refresh_plugs();
-                }
+            if (myFragment != null && myFragment.isVisible() && myFragment.getClass() == PlugFragment.class) {
+                ((PlugFragment) myFragment).refresh_plugs();
             }
             return true;
         }
@@ -302,6 +304,7 @@ public class NavigationDrawerFragment extends Fragment {
 
 
     private static final int REQUEST_CODE = 1234;
+
     /**
      * Fire an intent to start the voice recognition activity.
      */
@@ -322,44 +325,42 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String serverApiUrl = sharedPref.getString("server_api_url", null);
-
             Boolean value = false;
             Plug plug = null;
 
             // Populate the wordsList with the String values the recognition engine thought it heard
             ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            Integer levenshtein_distance = SettingsFragment.getLevenshteinDistance(getActivity());
 
-            for (String match: matches){
+            for (String match : matches) {
                 String[] words = match.split(" ");
 
-                if(words.length == 2) {
-                    for (String word : words) {
+                for (String word : words) {
+                    if (word.length() > 2) {
                         int distance = computeLevenshteinDistance(word, "encender");
-                        if (distance <= 2) {
+                        if (distance <= levenshtein_distance) {
                             value = true;
                         }
 
                         distance = computeLevenshteinDistance(word, "apagar");
-                        if (distance <= 2) {
+                        if (distance <= levenshtein_distance) {
                             value = false;
                         }
 
-                        for (Plug element : MainActivity.plugs) {
+                        for (Plug element : PlugList.getPlugs()) {
                             distance = computeLevenshteinDistance(word, element.getName());
-                            if (distance <= 2) {
+                            if (distance <= levenshtein_distance) {
                                 plug = element;
                                 break;
                             }
                         }
                     }
                 }
-            }
 
-            if (value != null && plug != null){
-                plug.setValue(value);
-                new PlugPostTask(getActivity(), serverApiUrl, plug).execute();
+                if (plug != null) {
+                    plug.setValue(value);
+                    break;
+                }
             }
         }
 
@@ -367,29 +368,27 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
 
-    private static String unaccent(String in){
-        String out = in.replaceAll("[èéêë]","e");
-        out = out.replaceAll("[ûù]","u");
-        out = out.replaceAll("[ïî]","i");
-        out = out.replaceAll("[àâ]","a");
-        out = out.replaceAll("Ô","o");
+    private static String unaccent(String in) {
+        String out = in.replaceAll("[èéêë]", "e");
+        out = out.replaceAll("[ûù]", "u");
+        out = out.replaceAll("[ïî]", "i");
+        out = out.replaceAll("[àâ]", "a");
+        out = out.replaceAll("Ô", "o");
 
-        out = out.replaceAll("[ÈÉÊË]","E");
-        out = out.replaceAll("[ÛÙ]","U");
-        out = out.replaceAll("[ÏÎ]","I");
-        out = out.replaceAll("[ÀÂ]","A");
-        out = out.replaceAll("Ô","O");
+        out = out.replaceAll("[ÈÉÊË]", "E");
+        out = out.replaceAll("[ÛÙ]", "U");
+        out = out.replaceAll("[ÏÎ]", "I");
+        out = out.replaceAll("[ÀÂ]", "A");
+        out = out.replaceAll("Ô", "O");
 
         return out;
     }
 
     private static int minimum(int a, int b, int c) {
-        if(a<=b && a<=c)
-        {
+        if (a <= b && a <= c) {
             return a;
         }
-        if(b<=a && b<=c)
-        {
+        if (b <= a && b <= c) {
             return b;
         }
         return c;
@@ -402,25 +401,21 @@ public class NavigationDrawerFragment extends Fragment {
         return computeLevenshteinDistance(str1.toCharArray(), str2.toCharArray());
     }
 
-    private static int computeLevenshteinDistance(char [] str1, char [] str2) {
-        int [][]distance = new int[str1.length+1][str2.length+1];
+    private static int computeLevenshteinDistance(char[] str1, char[] str2) {
+        int[][] distance = new int[str1.length + 1][str2.length + 1];
 
-        for(int i=0;i<=str1.length;i++)
-        {
-            distance[i][0]=i;
+        for (int i = 0; i <= str1.length; i++) {
+            distance[i][0] = i;
         }
-        for(int j=0;j<=str2.length;j++)
-        {
-            distance[0][j]=j;
+        for (int j = 0; j <= str2.length; j++) {
+            distance[0][j] = j;
         }
-        for(int i=1;i<=str1.length;i++)
-        {
-            for(int j=1;j<=str2.length;j++)
-            {
-                distance[i][j]= minimum(distance[i-1][j]+1,
-                        distance[i][j-1]+1,
-                        distance[i-1][j-1]+
-                                ((str1[i-1]==str2[j-1])?0:1));
+        for (int i = 1; i <= str1.length; i++) {
+            for (int j = 1; j <= str2.length; j++) {
+                distance[i][j] = minimum(distance[i - 1][j] + 1,
+                        distance[i][j - 1] + 1,
+                        distance[i - 1][j - 1] +
+                                ((str1[i - 1] == str2[j - 1]) ? 0 : 1));
             }
         }
         return distance[str1.length][str2.length];

@@ -10,5 +10,12 @@
             android:summary="http://..."
             android:dialogTitle="Set an server API URL:" />
 
+        <EditTextPreference
+            android:key="levenshtein_distance"
+            android:title="Levenshtein Distance:"
+            android:numeric="integer"
+            android:summary="2"
+            android:dialogTitle="Enter Levenshtein distance:" />
+
     </PreferenceCategory>
 </PreferenceScreen>

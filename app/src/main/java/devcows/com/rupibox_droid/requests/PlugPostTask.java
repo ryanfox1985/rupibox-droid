@@ -1,7 +1,8 @@
-package devcows.com.rupibox_droid;
+package devcows.com.rupibox_droid.requests;
 
-import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -17,19 +18,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import devcows.com.rupibox_droid.pojo.Plug;
+import devcows.com.rupibox_droid.pojo.PlugList;
+
 /**
  * Created by fox on 9/25/15.
  */
 public class PlugPostTask extends AsyncTask<Void, Void, String> {
 
     private final String TAG = "PlugPostTask";
-    private Context context;
     private String server_api_url;
     private Plug plug;
 
-    public PlugPostTask(Context context, String server_api_url, Plug plug) {
-        this.context = context;
-        this.server_api_url = server_api_url;
+    public PlugPostTask(Plug plug) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(PlugList.getContext());
+        server_api_url = sharedPref.getString("server_api_url", null);
+
         this.plug = plug;
     }
 
@@ -43,7 +47,7 @@ public class PlugPostTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         String message = String.format("Plug %s(%s): %s", plug.getName(), plug.getPin_pi(), plug.getValue());
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(PlugList.getContext(), message, Toast.LENGTH_SHORT).show();
         Log.v(TAG, "POST plug: " + result);
     }
 

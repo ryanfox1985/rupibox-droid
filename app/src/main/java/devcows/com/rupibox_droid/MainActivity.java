@@ -1,7 +1,6 @@
 package devcows.com.rupibox_droid;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -15,14 +14,17 @@ import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
 import com.octo.android.robospice.SpiceManager;
 
 import java.util.ArrayList;
-import java.util.List;
+
+import devcows.com.rupibox_droid.pojo.Plug;
+import devcows.com.rupibox_droid.pojo.PlugList;
+import devcows.com.rupibox_droid.views.PlugFragment;
+import devcows.com.rupibox_droid.views.SettingsFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     public static final int SECTION_MAIN = 1;
     public static final int SECTION_SETTINGS = 2;
-    public static List<Plug> plugs = new ArrayList<>();
 
 
     /**
@@ -36,9 +38,11 @@ public class MainActivity extends AppCompatActivity
      */
     private CharSequence mTitle;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        PlugList.setPlugs(new ArrayList<Plug>());
+        PlugList.setContext(getBaseContext());
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(getBaseContext(), position + 1, spiceManager), "MY_FRAGMENT")
+                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1, spiceManager), "MY_FRAGMENT")
                 .commit();
     }
 
@@ -138,13 +142,13 @@ public class MainActivity extends AppCompatActivity
          * Returns a new instance of this fragment for the given section
          * number.
          */
-        public static Fragment newInstance(Context context, int sectionNumber, SpiceManager spiceManager) {
+        public static Fragment newInstance(int sectionNumber, SpiceManager spiceManager) {
             mSpiceManager = spiceManager;
             Fragment fragment = new PlaceholderFragment();
 
             switch (sectionNumber) {
                 case MainActivity.SECTION_MAIN:
-                    fragment = new PlugFragment(context);
+                    fragment = new PlugFragment();
                     break;
                 case MainActivity.SECTION_SETTINGS:
                     fragment = new SettingsFragment();

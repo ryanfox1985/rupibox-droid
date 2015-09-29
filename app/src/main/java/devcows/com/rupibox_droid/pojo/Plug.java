@@ -1,10 +1,11 @@
-package devcows.com.rupibox_droid;
-
-import android.widget.Adapter;
+package devcows.com.rupibox_droid.pojo;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import devcows.com.rupibox_droid.adapters.PlugAdapter;
+import devcows.com.rupibox_droid.requests.PlugPostTask;
 
 /**
  * Created by fox on 9/25/15.
@@ -54,10 +55,8 @@ public class Plug {
         if(mAdapter != null) {
             this.mAdapter.notifyDataSetChanged();
         }
-    }
 
-    public String getUrl() {
-        return url;
+        new PlugPostTask(this).execute();
     }
 
     public void setAdapter(PlugAdapter adapter){

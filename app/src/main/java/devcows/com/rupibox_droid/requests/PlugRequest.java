@@ -1,16 +1,18 @@
-package devcows.com.rupibox_droid;
+package devcows.com.rupibox_droid.requests;
 
 import com.octo.android.robospice.request.springandroid.SpringAndroidSpiceRequest;
+
+import devcows.com.rupibox_droid.pojo.PlugList;
 
 /**
  * Created by fox on 9/25/15.
  */
 public class PlugRequest extends SpringAndroidSpiceRequest<PlugList> {
-
     private String server_api_url;
 
     public PlugRequest(String server_api_url) {
         super(PlugList.class);
+
         this.server_api_url = server_api_url;
     }
 

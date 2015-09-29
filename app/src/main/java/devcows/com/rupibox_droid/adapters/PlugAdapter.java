@@ -1,4 +1,4 @@
-package devcows.com.rupibox_droid;
+package devcows.com.rupibox_droid.adapters;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,7 +9,10 @@ import android.widget.BaseAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import java.util.List;
+import devcows.com.rupibox_droid.views.PlugFragment;
+import devcows.com.rupibox_droid.R;
+import devcows.com.rupibox_droid.pojo.Plug;
+import devcows.com.rupibox_droid.pojo.PlugList;
 
 /**
  * Created by fox on 9/25/15.
@@ -23,32 +26,26 @@ public class PlugAdapter extends BaseAdapter {
 
     private static final String TAG = "PlugAdapter";
 
-    private List<Plug> plugs;
     private LayoutInflater inflater = null;
     private PlugFragment fragment;
 
-    public PlugAdapter(Context c, List<Plug> plugs, PlugFragment fragment) {
+    public PlugAdapter(Context c, PlugFragment fragment) {
         Log.v(TAG, "Constructing CustomAdapter");
 
-        this.plugs = plugs;
         this.fragment = fragment;
         inflater = LayoutInflater.from(c);
-    }
-
-    public void setPlugs(List<Plug> plugs) {
-        this.plugs = plugs;
     }
 
     @Override
     public int getCount() {
         Log.v(TAG, "in getCount()");
-        return plugs.size();
+        return PlugList.getPlugs().size();
     }
 
     @Override
     public Object getItem(int position) {
         Log.v(TAG, "in getItem() for position " + position);
-        return plugs.get(position);
+        return PlugList.getPlugs().get(position);
     }
 
     @Override
@@ -80,6 +77,7 @@ public class PlugAdapter extends BaseAdapter {
 
         Plug plug = (Plug) getItem(position);
         plug.setAdapter(this);
+
         holder.sw_plug_value.setTag(plug);
         holder.sw_plug_value.setOnClickListener(fragment);
 

@@ -1,6 +1,5 @@
-package devcows.com.rupibox_droid;
+package devcows.com.rupibox_droid.views;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -17,7 +16,12 @@ import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 
-import java.util.ArrayList;
+import devcows.com.rupibox_droid.MainActivity;
+import devcows.com.rupibox_droid.R;
+import devcows.com.rupibox_droid.adapters.PlugAdapter;
+import devcows.com.rupibox_droid.pojo.PlugList;
+import devcows.com.rupibox_droid.pojo.Plug;
+import devcows.com.rupibox_droid.requests.PlugRequest;
 
 /**
  * Created by fox on 9/25/15.
@@ -27,77 +31,65 @@ public class PlugFragment extends MainActivity.PlaceholderFragment implements Re
 
     private TextView mTxtLoading;
     private ListView mListView;
-    private Context mContext;
     private String mServerApiUrl;
 
     private static final String TAG = "PlugFragment";
-
-    public PlugFragment(Context context) {
-        this.mContext = context;
-    }
 
     public void refresh_plugs(){
         mListView.setVisibility(View.INVISIBLE);
         mTxtLoading.setVisibility(View.VISIBLE);
         mTxtLoading.setText("Loading plugs...");
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(PlugList.getContext());
         mServerApiUrl = sharedPref.getString("server_api_url", null);
 
         if (mServerApiUrl != null) {
-            MainActivity.plugs = new ArrayList<>();
-
             PlugRequest request = new PlugRequest(mServerApiUrl);
             mSpiceManager.execute(request, "", DurationInMillis.ONE_MINUTE, this);
         } else {
-            Toast.makeText(mContext, "Please set server API URL!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(PlugList.getContext(), "Please set server API URL!", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         // Get ListView object from xml
         mListView = (ListView) rootView.findViewById(R.id.plug_list);
 
-        mAdapter = new PlugAdapter(mContext, new PlugList(), this);
+        mAdapter = new PlugAdapter(PlugList.getContext(), this);
         mListView.setAdapter(mAdapter);
+        PlugList.setAdapter(mAdapter);
 
         mTxtLoading = (TextView) rootView.findViewById(R.id.txt_loading);
 
         refresh_plugs();
-
         return rootView;
     }
 
 
     @Override
     public void onRequestFailure(SpiceException spiceException) {
-        mListView.setVisibility(View.INVISIBLE);
-
-        mTxtLoading.setVisibility(View.VISIBLE);
         mTxtLoading.setText("Error Robospice fail..." + spiceException.getMessage());
+
+        mListView.setVisibility(View.INVISIBLE);
+        mTxtLoading.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void onRequestSuccess(PlugList plugs) {
         mTxtLoading.setVisibility(View.INVISIBLE);
 
-        mAdapter.setPlugs(plugs);
-        mAdapter.notifyDataSetChanged();
-
+        PlugList.setPlugs(plugs);
         mListView.setVisibility(View.VISIBLE);
-        MainActivity.plugs = plugs;
     }
 
     @Override
     public void onClick(View v) {
         Plug plug = (Plug) v.getTag();
-        plug.setValue(((Switch) v).isChecked());
         Log.v(TAG, "POST plug: " + plug.toString());
 
-        new PlugPostTask(mContext, mServerApiUrl, plug).execute();
+        plug.setValue(((Switch) v).isChecked());
     }
 }
